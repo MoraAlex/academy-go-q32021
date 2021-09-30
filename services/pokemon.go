@@ -1,4 +1,4 @@
-package controller
+package services
 
 import (
 	"encoding/json"
@@ -10,13 +10,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type getter interface {
+type getterPokemon interface {
 	GetAll() ([]model.Pokemon, error)
 	GetByID(id string) (*model.Pokemon, error)
 }
 
 type pokemonRepo interface {
-	getter
+	getterPokemon
 }
 
 type service struct {

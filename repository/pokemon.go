@@ -1,4 +1,4 @@
-package services
+package repository
 
 import (
 	"encoding/csv"
@@ -14,11 +14,12 @@ import (
 
 type pokemonRepo struct{}
 
+//return pokemonRepo struct
 func NewPokemonRepo() pokemonRepo {
 	return pokemonRepo{}
 }
 
-// return all pokemons in the csv
+// return all pokemons from a csv
 func (p pokemonRepo) GetAll() ([]model.Pokemon, error) {
 	pokemonsFile, err := os.OpenFile("./utils/pokemon.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
@@ -33,7 +34,7 @@ func (p pokemonRepo) GetAll() ([]model.Pokemon, error) {
 	return pokemons, nil
 }
 
-// return the pokemon that match with the id
+// return the pokemon that match with the id from a csv
 func (p pokemonRepo) GetByID(id string) (*model.Pokemon, error) {
 	pokemonsFile, err := os.Open("./utils/pokemon.csv")
 	if err != nil {

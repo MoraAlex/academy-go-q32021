@@ -11,6 +11,7 @@ import (
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
-	routes.Get(router)
+	routes.GetterPokemon(router)
+	routes.GetterRegion(router)
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
