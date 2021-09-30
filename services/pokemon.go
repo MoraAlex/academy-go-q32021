@@ -1,64 +1,49 @@
-package services
+package controller
 
 import (
-	"encoding/csv"
-	"io"
+	"encoding/json"
 	"log"
-	"os"
-	"strings"
+	"net/http"
 
 	"github.com/MoraAlex/academy-go-q32021/model"
 
-	"github.com/gocarina/gocsv"
+	"github.com/gorilla/mux"
 )
 
-// return all pokemons in the csv
-func GetAllPokemons() ([]*model.Pokemon, error) {
-	pokemonsFile, err := os.OpenFile("./utils/pokemon.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return nil, err
-	}
-	defer pokemonsFile.Close()
-	pokemons := []*model.Pokemon{}
-
-	if err := gocsv.UnmarshalFile(pokemonsFile, &pokemons); err != nil {
-		log.Fatal(err)
-	}
-	return pokemons, nil
+type getter interface {
+	GetAll() ([]model.Pokemon, error)
+	GetByID(id string) (*model.Pokemon, error)
 }
 
-// return the pokemon that match with the id
-func GetPokemonById(id string) (*model.Pokemon, error) {
-	pokemonsFile, err := os.Open("./utils/pokemon.csv")
+type pokemonRepo interface {
+	getter
+}
+
+type service struct {
+	repo pokemonRepo
+}
+
+func NewService(rep pokemonRepo) service {
+	return service{rep}
+}
+
+// GetALlPokemons json repond to get All pokemons
+func (s service) GetAllPokemons(w http.ResponseWriter, r *http.Request) {
+	pokemons, err := s.repo.GetAll()
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	defer pokemonsFile.Close()
-	pokemon := []*model.Pokemon{}
-	reader := csv.NewReader(pokemonsFile)
-	var headers []string
-	var pokemonCsvString string
-	i := 0
-	for {
-		record, err := reader.Read()
-		if i == 0 {
-			headers = record
-			i++
-			pokemonCsvString = strings.Join(headers, ",") + "\n"
-		}
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		if record[0] == id {
-			pokemonCsvString += strings.Join(record, ",")
-			break
-		}
+	json.NewEncoder(w).Encode(pokemons)
+}
+
+// GetPokemonById json repond to get a pokemon by ID
+func (s service) GetPokemonByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	pokemons, err := s.repo.GetByID(id)
+	if err != nil {
+		log.Fatal(err)
 	}
-	if err := gocsv.UnmarshalString(pokemonCsvString, &pokemon); err != nil {
-		log.Fatalf("error Unmarshal: %v", err)
-	}
-	return pokemon[0], nil
+	json.NewEncoder(w).Encode(pokemons)
+
 }
