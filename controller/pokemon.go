@@ -1,4 +1,4 @@
-package services
+package controller
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ type service struct {
 	repo pokemonRepo
 }
 
-func NewService(rep pokemonRepo) service {
+func New(rep pokemonRepo) service {
 	return service{rep}
 }
 

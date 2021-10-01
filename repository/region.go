@@ -39,6 +39,8 @@ func (r regionRepo) GetAll() ([]model.Region, error) {
 
 //return a region by id from external API
 //Docs: https://pokeapi.co/docs/v2#regions
+// resti
+// viper leer config file
 func (r regionRepo) GetByID(id string) (model.Region, error) {
 	resp, err := http.Get(`https://pokeapi.co/api/v2/region/` + id)
 	if err != nil {

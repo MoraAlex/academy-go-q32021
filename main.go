@@ -4,14 +4,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/MoraAlex/academy-go-q32021/controller"
 	"github.com/MoraAlex/academy-go-q32021/routes"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
-	router := mux.NewRouter().StrictSlash(true)
-	routes.GetterPokemon(router)
-	routes.GetterRegion(router)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	c := controller.New(service)
+	r := routes.New(c)
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
