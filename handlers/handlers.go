@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"regexp"
 
@@ -35,7 +34,7 @@ func (h handlers) GetAllPokemons(w http.ResponseWriter, r *http.Request) {
 	pokemons, err := h.GetAllPokemonsUseCase.GetPokemons()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :("})
+		json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(" + err.Error()})
 	}
 	json.NewEncoder(w).Encode(pokemons)
 }
@@ -48,20 +47,32 @@ func (h handlers) GetPokemon(w http.ResponseWriter, r *http.Request) {
 		matched, err := regexp.Match("^[0-9]*$", []byte(id))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :("})
+			json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})
+			return
 		}
 		if !matched {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"message": "Bad request: ID is not valid"})
+			return
 		} else {
 			pokemons, err := h.GetPokemonApiUseCase.GetPokemon(id)
 			if err != nil {
-				log.Fatal(err)
+				if err.Error() == "Not found" {
+					w.WriteHeader(http.StatusNotFound)
+					json.NewEncoder(w).Encode(map[string]string{"message": "Pokemons Not Found", "error": err.Error()})
+					return
+				} else {
+					w.WriteHeader(http.StatusInternalServerError)
+					json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})
+					return
+				}
 			}
 			json.NewEncoder(w).Encode(pokemons)
+			return
 		}
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "ID not found"})
+		return
 	}
 }
