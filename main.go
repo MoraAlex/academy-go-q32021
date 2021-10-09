@@ -12,11 +12,13 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+const filePath = "./utils/pokemon.csv"
+
 func main() {
 	client := resty.New()
 	getPokApi := service.NewGetPokemonApi(client)
-	updateCsvS := service.NewUpdateCsv("./utils/pokemon.csv")
-	repo := repository.NewPokemon()
+	updateCsvS := service.NewUpdateCsv(filePath)
+	repo := repository.NewPokemon(filePath)
 	ucGetPokemons := usecase.NewGetPokemons(repo)
 	ucGetPokemon := usecase.NewGetPokemon(getPokApi, updateCsvS)
 	h := handlers.New(ucGetPokemons, ucGetPokemon)

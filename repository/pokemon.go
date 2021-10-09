@@ -7,16 +7,20 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-type pokeRepo struct{}
+type pokeRepo struct {
+	filePath string
+}
 
 //NewPokemon returns a new (pokeRepo struct {})
-func NewPokemon() pokeRepo {
-	return pokeRepo{}
+func NewPokemon(filePath string) pokeRepo {
+	return pokeRepo{
+		filePath: filePath,
+	}
 }
 
 //GetAll: This method returns a new([]*entities.Pokemon, error) from a CSV
 func (p pokeRepo) GetAll() ([]*entities.Pokemon, error) {
-	pokemonsFile, err := os.OpenFile("./utils/pokemon.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	pokemonsFile, err := os.OpenFile(p.filePath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
