@@ -15,7 +15,7 @@ import (
 func main() {
 	client := resty.New()
 	getPokApi := service.NewGetPokemonApi(client)
-	updateCsvS := service.NewUpdateCsv()
+	updateCsvS := service.NewUpdateCsv("./utils/pokemon.csv")
 	repo := repository.NewPokemon()
 	ucGetPokemons := usecase.NewGetPokemons(repo)
 	ucGetPokemon := usecase.NewGetPokemon(getPokApi, updateCsvS)

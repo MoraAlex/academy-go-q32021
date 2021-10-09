@@ -2,31 +2,43 @@ package service
 
 import (
 	"encoding/csv"
+	"errors"
+	"io"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
 	"github.com/gocarina/gocsv"
 )
 
-type updateCsvService struct{}
+type updateCsvService struct {
+	FilePath string
+}
 
-func NewUpdateCsv() updateCsvService {
-	return updateCsvService{}
+func NewUpdateCsv(file string) updateCsvService {
+	return updateCsvService{FilePath: file}
 }
 
 func (s updateCsvService) UpdateCsv(p entities.Pokemon) ([]*entities.Pokemon, error) {
-	pokemonsFile, err := os.OpenFile("./utils/pokemon.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	pokemonsFile, err := os.OpenFile(s.FilePath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
-	// rows, err := csv.NewReader(pokemonsFile).ReadAll()
-	// for _, row := range rows {
-	// 	for _, row := range row {
-	// 		fmt.Println(row)
-	// 	}
-	// }
+	r := csv.NewReader(pokemonsFile)
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		if record[0] == strconv.Itoa(p.ID) {
+			return nil, errors.New("That pokemons already exist")
+		}
+	}
 	wr := csv.NewWriter(pokemonsFile)
 	w := gocsv.NewSafeCSVWriter(wr)
 	defer pokemonsFile.Close()
