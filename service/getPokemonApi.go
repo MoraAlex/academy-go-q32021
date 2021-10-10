@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
 
@@ -26,7 +27,7 @@ func (s getPokemonApiService) GetPokemonApi(id string) (*entities.Pokemon, error
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode() != 200 {
+	if resp.StatusCode() != http.StatusOK {
 		return nil, errors.New("Not found")
 	}
 	pokemon := &entities.Pokemon{}

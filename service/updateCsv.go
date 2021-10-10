@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
+
 	"github.com/gocarina/gocsv"
 )
 
@@ -16,10 +17,13 @@ type updateCsvService struct {
 	FilePath string
 }
 
+//NewUpdateCsv takes (file string) as parameter and returns a new (updateCsvService struct {FilePath string})
 func NewUpdateCsv(file string) updateCsvService {
 	return updateCsvService{FilePath: file}
 }
 
+//UpdateCsv: This method takes (p entities.Pokemon) as parameter and returns ([]*entities.Pokemon, error)
+//This method save p inside csv file int the struct. If the pokemon already exists return an error
 func (s updateCsvService) UpdateCsv(p entities.Pokemon) ([]*entities.Pokemon, error) {
 	pokemonsFile, err := os.OpenFile(s.FilePath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {

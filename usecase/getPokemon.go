@@ -33,8 +33,5 @@ func (uc getPokemonUseCase) GetPokemon(id string) (*entities.Pokemon, error) {
 	if _, err := uc.UpdateCsvService.UpdateCsv(*pokemon); err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	return pokemon, err
 }

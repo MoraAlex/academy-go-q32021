@@ -1,8 +1,6 @@
 package usecase
 
-import (
-	"github.com/MoraAlex/academy-go-q32021/entities"
-)
+import "github.com/MoraAlex/academy-go-q32021/entities"
 
 type pokemonRepo interface {
 	GetAll() ([]*entities.Pokemon, error)

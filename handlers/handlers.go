@@ -43,36 +43,34 @@ func (h handlers) GetAllPokemons(w http.ResponseWriter, r *http.Request) {
 func (h handlers) GetPokemon(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
-	if ok {
-		matched, err := regexp.Match("^[0-9]*$", []byte(id))
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})
-			return
-		}
-		if !matched {
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"message": "Bad request: ID is not valid"})
-			return
-		} else {
-			pokemons, err := h.GetPokemonApiUseCase.GetPokemon(id)
-			if err != nil {
-				if err.Error() == "Not found" {
-					w.WriteHeader(http.StatusNotFound)
-					json.NewEncoder(w).Encode(map[string]string{"message": "Pokemons Not Found", "error": err.Error()})
-					return
-				} else {
-					w.WriteHeader(http.StatusInternalServerError)
-					json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})
-					return
-				}
-			}
-			json.NewEncoder(w).Encode(pokemons)
-			return
-		}
-	} else {
+	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"message": "ID not found"})
 		return
 	}
+	matched, err := regexp.Match("^[0-9]*$", []byte(id))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})
+		return
+	}
+	if !matched {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Bad request: ID is not valid"})
+		return
+	}
+	pokemons, err := h.GetPokemonApiUseCase.GetPokemon(id)
+	if err != nil {
+		if err.Error() == "Not found" {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"message": "Pokemons Not Found", "error": err.Error()})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})
+		return
+
+	}
+	json.NewEncoder(w).Encode(pokemons)
+	return
 }
