@@ -61,6 +61,15 @@ func (m mockGetPokemonsUseCase) GetPokemons() ([]*entities.Pokemon, error) {
 	return args[0].([]*entities.Pokemon), args.Error(1)
 }
 
+type mockGetPokemonsConcurrencyUseCase struct {
+	mock.Mock
+}
+
+func (m mockGetPokemonsConcurrencyUseCase) GetPokemonsConcurrency(t string, items int, ipw int) ([]*entities.Pokemon, error) {
+	args := m.Called()
+	return args[0].([]*entities.Pokemon), args.Error(1)
+}
+
 func TestGetAllPokemons(t *testing.T) {
 	testCases := []struct {
 		name         string
@@ -93,7 +102,8 @@ func TestGetAllPokemons(t *testing.T) {
 			mgp := mockGetPokemonsUseCase{}
 			mgp.On("GetPokemons").Return(tc.response, tc.err)
 			mgps := mockGetPokemonUseCase{}
-			h := New(mgp, mgps)
+			mgpc := mockGetPokemonsConcurrencyUseCase{}
+			h := New(mgp, mgps, mgpc)
 			r := httptest.NewRequest(http.MethodGet, tc.url, nil)
 			w := httptest.NewRecorder()
 			h.GetAllPokemons(w, r)
@@ -162,11 +172,12 @@ func TestGetPokemon(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mgp := mockGetPokemonsUseCase{}
 			mgps := mockGetPokemonUseCase{}
+			mgpc := mockGetPokemonsConcurrencyUseCase{}
 			mgps.On("GetPokemon", tc.id).Return(tc.response, tc.err)
 			vars := map[string]string{
 				"id": tc.id,
 			}
-			h := New(mgp, mgps)
+			h := New(mgp, mgps, mgpc)
 			r := httptest.NewRequest(http.MethodGet, tc.url, nil)
 			r = mux.SetURLVars(r, vars)
 			w := httptest.NewRecorder()

@@ -21,7 +21,8 @@ func main() {
 	repo := repository.NewPokemon(filePath)
 	ucGetPokemons := usecase.NewGetPokemons(repo)
 	ucGetPokemon := usecase.NewGetPokemon(getPokApi, updateCsvS)
-	h := handlers.New(ucGetPokemons, ucGetPokemon)
+	ucGetPokemonsC := usecase.NewPokemonsConcurrency()
+	h := handlers.New(ucGetPokemons, ucGetPokemon, ucGetPokemonsC)
 	r := routes.New(h)
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
