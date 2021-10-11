@@ -30,7 +30,7 @@ func (uc getPokemonUseCase) GetPokemon(id string) (*entities.Pokemon, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := uc.UpdateCsvService.UpdateCsv(*pokemon); err != nil {
+	if _, err := uc.UpdateCsvService.UpdateCsv(*pokemon); err.Error() != "That pokemons already exist" {
 		return nil, err
 	}
 	return pokemon, err
