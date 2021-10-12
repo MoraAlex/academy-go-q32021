@@ -16,12 +16,13 @@ const filePath = "./utils/pokemon.csv"
 
 func main() {
 	client := resty.New()
+	getPokemonsC := service.NewGetPokemonsConcurrency(filePath)
 	getPokApi := service.NewGetPokemonApi(client)
 	updateCsvS := service.NewUpdateCsv(filePath)
 	repo := repository.NewPokemon(filePath)
 	ucGetPokemons := usecase.NewGetPokemons(repo)
 	ucGetPokemon := usecase.NewGetPokemon(getPokApi, updateCsvS)
-	ucGetPokemonsC := usecase.NewPokemonsConcurrency()
+	ucGetPokemonsC := usecase.NewPokemonsConcurrency(getPokemonsC)
 	h := handlers.New(ucGetPokemons, ucGetPokemon, ucGetPokemonsC)
 	r := routes.New(h)
 	log.Fatal(http.ListenAndServe(":8080", r))
