@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
+
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -66,7 +67,7 @@ type mockGetPokemonsConcurrencyUseCase struct {
 }
 
 func (m mockGetPokemonsConcurrencyUseCase) GetPokemonsConcurrency(t string, items int, ipw int) ([]*entities.Pokemon, error) {
-	args := m.Called()
+	args := m.Called(t, items, ipw)
 	return args[0].([]*entities.Pokemon), args.Error(1)
 }
 
@@ -190,6 +191,134 @@ func TestGetPokemon(t *testing.T) {
 				msgbyte, _ := json.Marshal(map[string]string{"message": "Bad request: ID is not valid"})
 				assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)
 				assert.EqualValues(t, string(msgbyte)+"\n", string(data))
+			case http.StatusInternalServerError:
+				msgbyte, _ := json.Marshal(map[string]string{"message": "Ooops!! :(", "error": tc.err.Error()})
+				assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)
+				assert.EqualValues(t, string(msgbyte)+"\n", string(data))
+			case http.StatusNotFound:
+				if tc.hasError {
+					assert.EqualValues(t, map[string]string{"message": "Pokemons Not Found", "error": "Not found"}, res.StatusCode)
+					assert.EqualValues(t, (string(pjson) + "\n"), string(data))
+				} else {
+					assert.EqualValues(t, map[string]string{"message": "Pokemons Not Found", "error": tc.err.Error()}, res.StatusCode)
+					assert.EqualValues(t, (string(pjson) + "\n"), string(data))
+				}
+			case http.StatusOK:
+				assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)
+				assert.EqualValues(t, (string(pjson) + "\n"), string(data))
+			}
+			if tc.hasError {
+				assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)
+			}
+		})
+	}
+}
+
+func TestGetPokemonsConcurrency(t *testing.T) {
+	testCases := []struct {
+		name            string
+		response        []*entities.Pokemon
+		httpResponse    http.Response
+		hasError        bool
+		err             error
+		url             string
+		typ             string
+		items           int
+		itemsPerWorkers int
+	}{
+		{
+			name:            "No error",
+			response:        p,
+			httpResponse:    r200,
+			hasError:        false,
+			err:             nil,
+			url:             "/pokemons-concurrency?type=even&items=6&items_per_workers=6",
+			typ:             "even",
+			items:           6,
+			itemsPerWorkers: 6,
+		},
+		{
+			name:            "error",
+			response:        nil,
+			httpResponse:    r500,
+			hasError:        true,
+			err:             errors.New("Testing"),
+			url:             "/pokemons-concurrency?type=even&items=6&items_per_workers=6",
+			typ:             "even",
+			items:           6,
+			itemsPerWorkers: 6,
+		},
+		{
+			name:            "missing one param",
+			response:        nil,
+			httpResponse:    r400,
+			hasError:        false,
+			err:             nil,
+			url:             "/pokemons-concurrency?items=6&items_per_workers=6",
+			typ:             "",
+			items:           6,
+			itemsPerWorkers: 6,
+		},
+		{
+			name:            "sending a letter in items",
+			response:        nil,
+			httpResponse:    r400,
+			hasError:        false,
+			err:             nil,
+			url:             "/pokemons-concurrency?type=even&items=a&items_per_workers=6",
+			typ:             "even",
+			items:           6,
+			itemsPerWorkers: 6,
+		},
+		{
+			name:            "sending multiples items_per_workers params",
+			response:        nil,
+			httpResponse:    r400,
+			hasError:        false,
+			err:             nil,
+			url:             "/pokemons-concurrency?type=even&items=6&items_per_workers=6&items_per_workers=6&items_per_workers=6",
+			typ:             "even",
+			items:           6,
+			itemsPerWorkers: 6,
+		},
+		{
+			name:            "sending 'Test' in type param",
+			response:        p,
+			httpResponse:    r200,
+			hasError:        false,
+			err:             nil,
+			url:             "/pokemons-concurrency?type=test&items=6&items_per_workers=6",
+			typ:             "even",
+			items:           6,
+			itemsPerWorkers: 6,
+		},
+	}
+
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgp := mockGetPokemonsUseCase{}
+			mgps := mockGetPokemonUseCase{}
+			mgpc := mockGetPokemonsConcurrencyUseCase{}
+			mgpc.On("GetPokemonsConcurrency", tc.typ, tc.items, tc.itemsPerWorkers).Return(tc.response, tc.err)
+			h := New(mgp, mgps, mgpc)
+			r := httptest.NewRequest(http.MethodGet, tc.url, nil)
+			w := httptest.NewRecorder()
+			h.GetPokemonsConcurrency(w, r)
+			res := w.Result()
+			data, _ := ioutil.ReadAll(res.Body)
+			pjson, _ := json.Marshal(tc.response)
+			switch res.StatusCode {
+			case http.StatusBadRequest:
+				if i == 2 {
+					msgbyte, _ := json.Marshal(map[string]string{"message": "type param not defined"})
+					assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)
+					assert.EqualValues(t, string(msgbyte)+"\n", string(data))
+				}
+				if i == 4 {
+					msgbyte, _ := json.Marshal(map[string]string{"message": "invalid number of arguments to items_per_workers  param"})
+					assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)
+					assert.EqualValues(t, string(msgbyte)+"\n", string(data))
+				}
 			case http.StatusInternalServerError:
 				msgbyte, _ := json.Marshal(map[string]string{"message": "Ooops!! :(", "error": tc.err.Error()})
 				assert.EqualValues(t, tc.httpResponse.StatusCode, res.StatusCode)

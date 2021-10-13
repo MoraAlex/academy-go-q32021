@@ -30,6 +30,7 @@ func (s updateCsvService) UpdateCsv(p entities.Pokemon) ([]*entities.Pokemon, er
 		log.Fatal(err)
 		return nil, err
 	}
+	defer pokemonsFile.Close()
 	r := csv.NewReader(pokemonsFile)
 	for {
 		record, err := r.Read()
@@ -45,7 +46,6 @@ func (s updateCsvService) UpdateCsv(p entities.Pokemon) ([]*entities.Pokemon, er
 	}
 	wr := csv.NewWriter(pokemonsFile)
 	w := gocsv.NewSafeCSVWriter(wr)
-	defer pokemonsFile.Close()
 	pokemons := []*entities.Pokemon{}
 	pokemons = append(pokemons, &p)
 	if err := gocsv.MarshalCSVWithoutHeaders(pokemons, w); err != nil {

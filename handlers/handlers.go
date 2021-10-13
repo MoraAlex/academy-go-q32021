@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
 	"github.com/gorilla/mux"
@@ -30,7 +29,8 @@ type handlers struct {
 }
 
 //New takes (GetAllPokemonsUseCase getPokemonsUseCase interface {GetPokemon(id string) (*entities.Pokemon, error)},
-// GetPokemonApiUseCase getPokemonUseCase interface {GetPokemons() ([]*entities.Pokemon, error)}) as parameters
+// GetPokemonApiUseCase getPokemonUseCase interface {GetPokemons() ([]*entities.Pokemon, error)},
+// GetPokemonsConcurrencyUseCase getPokemonsConcurrencyUseCase interface {GetPokemonsConcurrency(t string, items int, ipw int) ([]*entities.Pokemon, error)}) as parameters
 // and returns a new (handlers struct {GetAllPokemonsUseCase getPokemonsUseCase GetPokemonApiUseCase getPokemonUseCase})
 func New(ucpokemons getPokemonsUseCase, ucpokemon getPokemonUseCase, usconcurrency getPokemonsConcurrencyUseCase) handlers {
 	return handlers{GetAllPokemonsUseCase: ucpokemons, GetPokemonApiUseCase: ucpokemon, GetPokemonsConcurrencyUseCase: usconcurrency}
@@ -82,6 +82,7 @@ func (h handlers) GetPokemon(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+//GetPokemonsConcurrency: This method is the handler for /pokemons-concurrency?type={string}&items={7}&items_per_workers={int}
 func (h handlers) GetPokemonsConcurrency(w http.ResponseWriter, r *http.Request) {
 	vars := r.URL.Query()
 	t, ok := vars["type"]
@@ -134,7 +135,7 @@ func (h handlers) GetPokemonsConcurrency(w http.ResponseWriter, r *http.Request)
 		json.NewEncoder(w).Encode(map[string]string{"message": "invalid type on param items_per_work "})
 		return
 	}
-	pokemons, err := h.GetPokemonsConcurrencyUseCase.GetPokemonsConcurrency(strings.Join(t, ""), itemsint, ipwint)
+	pokemons, err := h.GetPokemonsConcurrencyUseCase.GetPokemonsConcurrency(t[0], itemsint, ipwint)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Ooops!! :(", "error": err.Error()})

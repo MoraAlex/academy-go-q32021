@@ -15,14 +15,27 @@ type getPokemonsConcurrencyService struct {
 	filepath string
 }
 
+//NewGetPokemonsConcurrency takes (filePath string) as parameter and returns a new (getPokemonsConcurrencyService struct {filepath string})
 func NewGetPokemonsConcurrency(filePath string) getPokemonsConcurrencyService {
 	return getPokemonsConcurrencyService{filePath}
 }
 
+//GetPokemonsConcurrency: This method takes (t string, items int, ipw int) as parameters and returns (*entities.Pokemon, error)
+//t: string. Only can be odd or even
+//items: int. The number of pokemons that this method returns
+//ipw: int. items that a single work can handle
 func (s getPokemonsConcurrencyService) GetPokemonsConcurrency(t string, items int, ipw int) ([]*entities.Pokemon, error) {
-	jobs := make(chan []string, 100)
-	res := make(chan entities.Pokemon, 100)
-	go worker(jobs, res)
+	jobs := make(chan []string)
+	res := make(chan entities.Pokemon)
+	var workersLimit int
+	if items < ipw {
+		workersLimit = 1
+	} else {
+		workersLimit = items / ipw
+	}
+	for i := 1; i <= workersLimit; i++ {
+		go worker(i, jobs, res)
+	}
 	pokemonsFile, err := os.OpenFile(s.filepath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
@@ -30,34 +43,55 @@ func (s getPokemonsConcurrencyService) GetPokemonsConcurrency(t string, items in
 	}
 	r := csv.NewReader(pokemonsFile)
 	pokemons := []*entities.Pokemon{}
+	i := 0
 	for {
 		record, err := r.Read()
-		if err == io.EOF {
+		if err == io.EOF || i == items {
 			close(jobs)
 			break
 		}
 		if record[0] == "id" {
 			continue
 		}
+		idint, err := strconv.Atoi(record[0])
+		switch t {
+		case "odd":
+			if idint%2 == 0 {
+				jobs <- record
+				pokemon := <-res
+				pokemons = append(pokemons, &pokemon)
+				i++
+			}
+		case "even":
+			if idint%2 != 0 {
+				jobs <- record
+				pokemon := <-res
+				pokemons = append(pokemons, &pokemon)
+				i++
+			}
+		default:
+			jobs <- record
+			pokemon := <-res
+			pokemons = append(pokemons, &pokemon)
+			i++
+		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		jobs <- record
-		pokemon := <-res
-		pokemons = append(pokemons, &pokemon)
 	}
 	defer pokemonsFile.Close()
 	return pokemons, nil
 }
 
-func worker(jobs <-chan []string, result chan<- entities.Pokemon) {
+func worker(wid int, jobs <-chan []string, result chan<- entities.Pokemon) {
+	fmt.Println(wid, jobs, result)
 	for j := range jobs {
-		pid, err := strconv.Atoi(j[0])
+		id, err := strconv.Atoi(j[0])
 		if err != nil {
 			fmt.Println(err)
 		}
 		p := entities.Pokemon{
-			ID:         pid,
+			ID:         id,
 			Name:       j[1],
 			MainType:   j[2],
 			SecondType: j[3],
