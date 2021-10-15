@@ -12,18 +12,19 @@ import (
 
 type getPokemonApiService struct {
 	Client *resty.Client
+	Api    string
 }
 
 //NewGetPokemonApi takes (client *resty.Client) as parameter and returns a new (getPokemonApiService struct {Client *resty.Client})
-func NewGetPokemonApi(client *resty.Client) getPokemonApiService {
-	return getPokemonApiService{Client: client}
+func NewGetPokemonApi(client *resty.Client, api string) getPokemonApiService {
+	return getPokemonApiService{Client: client, Api: api}
 }
 
 //GetPokemonApi: This method takes (id string) as parameter and returns (*entities.Pokemon, error)
 func (s getPokemonApiService) GetPokemonApi(id string) (*entities.Pokemon, error) {
 	resp, err := s.Client.R().
 		EnableTrace().
-		Get("https://pokeapi.co/api/v2/pokemon/" + id)
+		Get(s.Api + id)
 	if err != nil {
 		return nil, err
 	}
