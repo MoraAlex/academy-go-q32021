@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
