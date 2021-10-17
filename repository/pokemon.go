@@ -1,11 +1,12 @@
 package repository
 
 import (
+	"encoding/csv"
+	"io"
 	"os"
+	"strconv"
 
 	"github.com/MoraAlex/academy-go-q32021/entities"
-
-	"github.com/gocarina/gocsv"
 )
 
 type pokeRepo struct {
@@ -27,8 +28,26 @@ func (p pokeRepo) GetAll() ([]*entities.Pokemon, error) {
 	}
 	defer pokemonsFile.Close()
 	pokemons := []*entities.Pokemon{}
-	if err := gocsv.UnmarshalFile(pokemonsFile, &pokemons); err != nil {
-		return nil, err
+	reader := csv.NewReader(pokemonsFile)
+	i := 0
+	for {
+		row, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if i == 0 {
+			i++
+			continue
+		}
+		idint, err := strconv.Atoi(row[0])
+		pokemon := entities.Pokemon{
+			ID:         idint,
+			Name:       row[1],
+			MainType:   row[2],
+			SecondType: row[3],
+		}
+		pokemons = append(pokemons, &pokemon)
+		i++
 	}
 	return pokemons, nil
 }

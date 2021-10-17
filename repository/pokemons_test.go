@@ -32,6 +32,7 @@ func TestGetAll(t *testing.T) {
 		length   int
 		err      error
 		hasError bool
+		testFile string
 	}{
 		{
 			name:     "Get all pokemons",
@@ -39,12 +40,14 @@ func TestGetAll(t *testing.T) {
 			length:   1,
 			err:      nil,
 			hasError: false,
+			testFile: "./testfile.csv",
 		},
 		{
 			name:     "Error",
 			response: nil,
 			err:      errors.New("Test"),
 			hasError: true,
+			testFile: "",
 		},
 	}
 
@@ -70,7 +73,7 @@ func TestGetAll(t *testing.T) {
 			f.Close()
 		}
 		t.Run(tc.name, func(t *testing.T) {
-			s := NewPokemon("./testfile.csv")
+			s := NewPokemon(tc.testFile)
 			pokemons, err := s.GetAll()
 			if tc.hasError {
 				assert.Error(t, err)

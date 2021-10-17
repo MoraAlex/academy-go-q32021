@@ -74,15 +74,6 @@ func TestGetPokemonApi(t *testing.T) {
 
 		resp := w.Result()
 		body, _ := ioutil.ReadAll(resp.Body)
-
-		// responder := httpmock.NewStringResponder(tc.mockApiRespCode, tc.mockApiResp)
-		// apiUrl := "https://pokeapi.co/api/v2/pokemon/" + tc.id
-		// httpmock.RegisterResponder(http.MethodGet, apiUrl, responder)
-		// s := NewGetPokemonApi(client)
-		// pokemons, err := s.GetPokemonApi(tc.id)
-		// assert.Error(t, err)
-		// assert.EqualValues(t, tc.err.Error(), err.Error())
-		// assert.EqualValues(t, tc.expectedResp, pokemons)
 		assert.EqualValues(t, tc.expectedBody, body)
 
 	}
