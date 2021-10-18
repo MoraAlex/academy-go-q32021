@@ -1,0 +1,3 @@
+//.go de config igual que el yaml
+// load file donde alas el archivo de config aqui usa viper
+// en el servicio recibe un cliente de restify
